@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Daun</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm text-center">
+        <h1 class="text-xl font-bold text-green-700 mb-4">Scanner Penyakit Daun</h1>
+        <video id="video" autoplay playsinline class="w-full h-64 bg-black rounded-2xl mb-4 object-cover"></video>
+        <button id="snap" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">Deteksi Sekarang</button>
+        <p id="hasil" class="mt-4 font-bold text-lg text-green-800"></p>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(s => video.srcObject = s);
+
+        document.getElementById('snap').onclick = async () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                document.getElementById('hasil').innerText = "Menganalisis...";
+                let formData = new FormData();
+                formData.append('file', blob);
+                
+                try {
+                    let res = await fetch('http://127.0.0.1:8000/deteksi', { method: 'POST', body: formData });
+                    let data = await res.json();
+                    document.getElementById('hasil').innerText = "Hasil: " + data.penyakit;
+                } catch (e) {
+                    document.getElementById('hasil').innerText = "Error server!";
+                }
+            }, 'image/jpeg');
+        };
+    </script>
+</body>
+</html>
